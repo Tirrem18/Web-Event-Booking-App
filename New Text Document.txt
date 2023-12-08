@@ -1,0 +1,1 @@
+public ICollection<Qualifications> Qualifications { get; set; } instead of list
