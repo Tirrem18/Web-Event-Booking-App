@@ -1,0 +1,51 @@
+﻿@model ThAmCo.Events.Data.Staff
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Staff</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.FirstName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.FirstName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.LastName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.LastName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.StaffId)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.StaffId)
+        </dd>
+
+    </dl>
+    </div>
+    <h4>Qualifications</h4>
+        @if (Model.StaffQualifications != null && Model.StaffQualifications.Any())
+        {
+            <ul>
+                @foreach (var qual in Model.StaffQualifications)
+                {
+                    <li>@qual.Qualification.Name</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>No qualifications listed.</p>
+        }
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model?.StaffId">Edit</a> |
+        <a asp-action="Index">Back to List</a>
+    </div>

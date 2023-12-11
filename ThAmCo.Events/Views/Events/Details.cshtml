@@ -1,0 +1,61 @@
+﻿@model ThAmCo.Events.Data.Event
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Event</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Title)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+    </dl>
+</div>
+
+<div>
+    <h4>Guests</h4>
+    @if (Model.Bookings.Any())
+    {
+        <p>Total Guests: @Model.Bookings.Count</p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Guest Name</th>
+                    <th>Is Attending</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var booking in Model.Bookings)
+                {
+                    <tr>
+                        <td>@booking.Guest.FirstName @booking.Guest.LastName</td>
+                        <td>@(booking.IsAttending ? "Yes" : "No")</td>
+                        <td>
+                            <a asp-controller="Bookings" asp-action="Edit" asp-route-id="@booking.BookingId">Edit</a> |
+                            <a asp-controller="Bookings" asp-action="Delete" asp-route-id="@booking.BookingId">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No guests have been booked for this event.</p>
+    }
+</div>
+<div>
+    <a asp-action="Create" asp-controller="Bookings" asp-route-eventId="@Model.EventId">Add Booking</a>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.EventId">Edit Event</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

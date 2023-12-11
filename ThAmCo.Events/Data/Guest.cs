@@ -15,6 +15,10 @@ namespace ThAmCo.Events.Data
         [Required, EmailAddress, StringLength(100)]
         public string Email { get; set; }
 
-        // Additional properties eventually
+        [Required, MinLength(7), MaxLength(15)] //Different countyrs phone numbers are different lengths
+        public string PhoneNumber { get; set; }
+
+        public List<Booking> Bookings { get; set; }
+
     }
 }
