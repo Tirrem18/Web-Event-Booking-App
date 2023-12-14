@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace ThAmCo.Events.Models; 
+using System.ComponentModel.DataAnnotations;
 
 public class EventTypeDTO
 

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -45,6 +41,38 @@ namespace ThAmCo.Events.Controllers
 
             return View(@event);
         }
+        // GET: Events/InitialCreate
+        public async Task<IActionResult> InitialCreate()
+        {
+            ViewData["EventTypes"] = new SelectList(await FetchEventTypes(), "Id", "Title");
+            return View(new InitialCreateViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CheckAvailability(InitialCreateViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Fetch event types again to repopulate the dropdown list
+                ViewData["EventTypes"] = new SelectList(await FetchEventTypes(), "Id", "Title", model.EventTypeId);
+                return View("InitialCreate", model); // Re-render the same view with errors
+            }
+
+
+            var availableVenues = await GetAvailableVenuesFromAPI(model.EventTypeId, model.BeginDate, model.EndDate);
+
+            var pickVenueModel = new PickVenueViewModel
+            {
+                EventTypeId = model.EventTypeId,
+                BeginDate = model.BeginDate,
+                EndDate = model.EndDate,
+                AvailableVenues = availableVenues
+            };
+            return View("PickVenue", pickVenueModel);
+        }
+
+
 
         // GET: Events/Create
         public async Task<IActionResult> Create()
@@ -85,6 +113,11 @@ namespace ThAmCo.Events.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            List<EventTypeDTO> eventTypes = new List<EventTypeDTO>();
+            // ... code to fetch event types from API ...
+            ViewData["EventTypes"] = new SelectList(eventTypes, "Id", "Title", @event.EventTypeId);
+
             return View(@event);
         }
 
@@ -196,5 +229,40 @@ namespace ThAmCo.Events.Controllers
         {
           return _context.Events.Any(e => e.EventId == id);
         }
+
+        private async Task<List<EventTypeDTO>> FetchEventTypes()
+        {
+            List<EventTypeDTO> eventTypes = new List<EventTypeDTO>();
+            using (var httpClient = new HttpClient())
+            {
+                string apiUrl = "https://localhost:7088/api/eventtypes";
+                var response = await httpClient.GetAsync(apiUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string apiResponse = await response.Content.ReadAsStringAsync();
+                    eventTypes = JsonConvert.DeserializeObject<List<EventTypeDTO>>(apiResponse);
+                }
+            }
+            return eventTypes;
+        }
+
+        private async Task<List<VenueAvailabilityDTO>> GetAvailableVenuesFromAPI(string eventType, DateTime beginDate, DateTime endDate)
+        {
+            List<VenueAvailabilityDTO> availableVenues = new List<VenueAvailabilityDTO>();
+            using (var httpClient = new HttpClient())
+            {
+                string apiUrl = $"https://localhost:7088/api/availability?eventType={eventType}&beginDate={beginDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+                var response = await httpClient.GetAsync(apiUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string apiResponse = await response.Content.ReadAsStringAsync();
+                    availableVenues = JsonConvert.DeserializeObject<List<VenueAvailabilityDTO>>(apiResponse);
+                }
+            }
+            return availableVenues;
+        }
+
     }
 }

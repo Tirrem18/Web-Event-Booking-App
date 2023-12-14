@@ -1,0 +1,57 @@
+﻿@model ThAmCo.Events.Models.PickVenueViewModel
+
+@{
+    ViewData["Title"] = "Select Venue";
+}
+
+<h1>Select a Venue for Your Event</h1>
+
+@if (!string.IsNullOrEmpty(ViewData["ErrorMessage"] as string))
+{
+    <div class="alert alert-danger">
+        @ViewData["ErrorMessage"]
+    </div>
+}
+
+<form asp-action="FinalCreate" method="post">
+    <input type="hidden" asp-for="EventTypeId" />
+    <input type="hidden" asp-for="BeginDate" />
+    <input type="hidden" asp-for="EndDate" />
+
+    @if (Model.AvailableVenues != null && Model.AvailableVenues.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Venue</th>
+                    <th>Date</th>
+                    <th>Cost Per Hour</th>
+                    <th>Select</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var venue in Model.AvailableVenues)
+                {
+                    <tr>
+                        <td>@venue.Name</td>
+                        <td>@venue.Date.ToString("yyyy-MM-dd")</td>
+                        <td>$@venue.CostPerHour</td>
+                        <td>
+                            <input type="radio" asp-for="SelectedVenueCode" value="@venue.VenueCode" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No available venues found for the selected dates and event type chosen.</p>
+    }
+
+    <button type="submit" class="btn btn-primary" disabled="@(Model.AvailableVenues == null)">Proceed</button>
+</form>
+
+<div>
+    <a asp-action="InitialCreate">Go Back</a>
+</div>
