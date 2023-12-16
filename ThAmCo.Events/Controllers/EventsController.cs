@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ThAmCo.Events.Data;
 using ThAmCo.Events.Models;
+using ThAmCo.Events.Views.Events;
 
 namespace ThAmCo.Events.Controllers
 {
@@ -50,74 +51,113 @@ namespace ThAmCo.Events.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CheckAvailability(InitialCreateViewModel model)
+        public async Task<IActionResult> InitialCreate(InitialCreateViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                // Fetch event types again to repopulate the dropdown list
                 ViewData["EventTypes"] = new SelectList(await FetchEventTypes(), "Id", "Title", model.EventTypeId);
-                return View("InitialCreate", model); // Re-render the same view with errors
+                return View(model); // Re-render the same view with errors
             }
 
-
             var availableVenues = await GetAvailableVenuesFromAPI(model.EventTypeId, model.BeginDate, model.EndDate);
+            if (availableVenues.Any())
+            {
+                // Pass data to PickVenue (GET)
+                return RedirectToAction("PickVenue", new { model.EventTypeId, model.BeginDate, model.EndDate });
+            }
+            else
+            {
+                ViewData["ErrorMessage"] = "No venues are available for the selected dates and event type.";
+                ViewData["EventTypes"] = new SelectList(await FetchEventTypes(), "Id", "Title", model.EventTypeId);
+                return View(model);
+            }
+        }
 
+        // GET: Events/PickVenue
+        public async Task<IActionResult> PickVenue(string eventTypeId, DateTime beginDate, DateTime endDate)
+        {
+            var availableVenues = await GetAvailableVenuesFromAPI(eventTypeId, beginDate, endDate);
             var pickVenueModel = new PickVenueViewModel
             {
-                EventTypeId = model.EventTypeId,
-                BeginDate = model.BeginDate,
-                EndDate = model.EndDate,
+                EventTypeId = eventTypeId,
+                BeginDate = beginDate,
+                EndDate = endDate,
                 AvailableVenues = availableVenues
             };
-            return View("PickVenue", pickVenueModel);
+            return View(pickVenueModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PickVenue(PickVenueViewModel model)
+        {
+            if (string.IsNullOrEmpty(model.SelectedVenue))
+            {
+                // No venue and date combination selected, show an error message
+                ViewData["ErrorMessage"] = "No venue has been selected. Please select a venue to proceed";
+
+                // Repopulate the available venues
+                model.AvailableVenues = await GetAvailableVenuesFromAPI(model.EventTypeId, model.BeginDate, model.EndDate);
+                return View(model);
+            }
+            else
+            {
+                // Split the SelectedVenue into VenueCode and Date
+                var parts = model.SelectedVenue.Split('|');
+                if (parts.Length == 2)
+                {
+                    var selectedVenueCode = parts[0];
+                    var selectedDate = DateTime.Parse(parts[1]);
+                    string eventType = model.EventTypeId;
+
+                    return RedirectToAction("Create", new { selectedVenueCode, selectedDate, eventType });
+                }
+                else
+                {
+                    // If the selected venue string is not in the correct format, show an error
+                    ViewData["ErrorMessage"] = "Invalid venue selection. Please try again.";
+                    model.AvailableVenues = await GetAvailableVenuesFromAPI(model.EventTypeId, model.BeginDate, model.EndDate);
+                    return View(model);
+                }
+            }
         }
 
 
 
         // GET: Events/Create
-        public async Task<IActionResult> Create()
+        public IActionResult Create(string selectedVenueCode, DateTime selectedDate, string eventType)
         {
-            List<EventTypeDTO> eventTypes = new List<EventTypeDTO>();
-            using (var httpClient = new HttpClient())
+            var viewModel = new Event
             {
-                // Replace with your Venues API URL
-                string apiUrl = "https://localhost:7088/api/eventtypes";
-                var response = await httpClient.GetAsync(apiUrl);
+                SelectedVenueCode = selectedVenueCode,
+                SelectedDate = selectedDate,
+                EventTypeId = eventType,
+            };
 
-                if (response.IsSuccessStatusCode)
-                {
-                    string apiResponse = await response.Content.ReadAsStringAsync();
-                    eventTypes = JsonConvert.DeserializeObject<List<EventTypeDTO>>(apiResponse);
-                }
-            }
+            // You can also pass any additional data needed for the form
+            // For example, if you need a list of event types
+            // ViewData["EventTypes"] = new SelectList(...);
 
-            ViewData["EventTypes"] = new SelectList(eventTypes, "Id", "Title");
-            return View();
+            return View(viewModel);
         }
 
 
         // POST: Events/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("EventId,Title,EventTypeId")] Event @event)
-
+        public async Task<IActionResult> Create([Bind("Title, SelectedVenueCode, SelectedDate, EventTypeId")] Event @event)
         {
-            Console.WriteLine("Title: " + @event.Title);
-            Console.WriteLine("EventTypeId: " + @event.EventTypeId);
-
             if (ModelState.IsValid)
             {
+                // Add the new event to the context
                 _context.Add(@event);
                 await _context.SaveChangesAsync();
+
+                // Redirect to the index action/view after creating the event
                 return RedirectToAction(nameof(Index));
             }
 
-            List<EventTypeDTO> eventTypes = new List<EventTypeDTO>();
-            // ... code to fetch event types from API ...
-            ViewData["EventTypes"] = new SelectList(eventTypes, "Id", "Title", @event.EventTypeId);
-
+            // If the model state is not valid, re-render the create view with the current model
             return View(@event);
         }
 

@@ -8,6 +8,7 @@ namespace ThAmCo.Events.Models
         public DateTime BeginDate { get; set; }
         public DateTime EndDate { get; set; }
         public List<VenueAvailabilityDTO> AvailableVenues { get; set; }
-        public string SelectedVenueCode { get; set; }
+        public string SelectedVenue { get; set; }
+
     }
 }

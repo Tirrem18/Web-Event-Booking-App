@@ -6,17 +6,17 @@
 
 <h1>Select a Venue for Your Event</h1>
 
-@if (!string.IsNullOrEmpty(ViewData["ErrorMessage"] as string))
+@if (ViewData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger">
         @ViewData["ErrorMessage"]
     </div>
 }
 
-<form asp-action="FinalCreate" method="post">
+<form asp-action="PickVenue" method="post">
     <input type="hidden" asp-for="EventTypeId" />
-    <input type="hidden" asp-for="BeginDate" />
-    <input type="hidden" asp-for="EndDate" />
+    <input type="hidden" name="BeginDate" value="@Model.BeginDate.ToString("dd/MM/yyyy")" />
+    <input type="hidden" name="EndDate" value="@Model.EndDate.ToString("dd/MM/yyyy")" />
 
     @if (Model.AvailableVenues != null && Model.AvailableVenues.Any())
     {
@@ -34,10 +34,10 @@
                 {
                     <tr>
                         <td>@venue.Name</td>
-                        <td>@venue.Date.ToString("yyyy-MM-dd")</td>
+                        <td>@venue.Date.ToString("dd-MM-yyyy")</td>
                         <td>$@venue.CostPerHour</td>
                         <td>
-                            <input type="radio" asp-for="SelectedVenueCode" value="@venue.VenueCode" />
+                            <input type="radio" name="SelectedVenue" value="@($"{venue.Code}|{venue.Date:yyyy-MM-dd}")" />
                         </td>
                     </tr>
                 }
@@ -46,7 +46,7 @@
     }
     else
     {
-        <p>No available venues found for the selected dates and event type chosen.</p>
+        <p>An error as occured.</p>
     }
 
     <button type="submit" class="btn btn-primary" disabled="@(Model.AvailableVenues == null)">Proceed</button>

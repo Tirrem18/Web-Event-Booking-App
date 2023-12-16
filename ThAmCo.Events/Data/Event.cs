@@ -10,8 +10,10 @@ namespace ThAmCo.Events.Data
         [Required, StringLength(20)]
         public string Title { get; set; }
 
-        [Required]
-         public string EventTypeId { get; set; }
+        public string EventTypeId { get; set; }
+        public string SelectedVenueCode { get; set; }
+        public DateTime SelectedDate { get; set; }
+
 
         public List<Booking> Bookings { get; set; }
 
