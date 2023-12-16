@@ -5,6 +5,12 @@
 }
 
 <h1>Create Event</h1>
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @ViewData["ErrorMessage"]
+    </div>
+}
 
 <form asp-action="Create" method="post">
     <input type="hidden" asp-for="EventTypeId" />

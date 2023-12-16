@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.Text;
 using ThAmCo.Events.Data;
 using ThAmCo.Events.Models;
 using ThAmCo.Events.Views.Events;
+using ThAmCo.Venues.Models;
 
 namespace ThAmCo.Events.Controllers
 {
@@ -149,15 +151,28 @@ namespace ThAmCo.Events.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Add the new event to the context
-                _context.Add(@event);
-                await _context.SaveChangesAsync();
 
-                // Redirect to the index action/view after creating the event
+                // set to 1 atm
+                string staffId = "1";
+
+                // Create reservation
+                bool reservationCreated = await CreateReservationAsync(@event.SelectedVenueCode, @event.SelectedDate, staffId);
+                if (!reservationCreated)
+                {
+                    ViewData["ErrorMessage"] = "Sorry, we can't book this reservation, please try another venue";
+                    return View(@event);
+                }
+                else
+                {
+                    // Add and save event
+                    _context.Add(@event);
+                    await _context.SaveChangesAsync();
+
+                }
+
                 return RedirectToAction(nameof(Index));
             }
 
-            // If the model state is not valid, re-render the create view with the current model
             return View(@event);
         }
 
@@ -302,6 +317,27 @@ namespace ThAmCo.Events.Controllers
                 }
             }
             return availableVenues;
+        }
+
+        private async Task<bool> CreateReservationAsync(string venueCode, DateTime eventDate, string staffId)
+        {
+            var reservationDto = new ReservationPostDto
+            {
+                EventDate = eventDate,
+                VenueCode = venueCode,
+                StaffId = staffId 
+            };
+
+            using (var httpClient = new HttpClient())
+            {
+                string apiUrl = "https://localhost:7088/api/reservations";
+                var content = new StringContent(JsonConvert.SerializeObject(reservationDto), Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync(apiUrl, content);
+
+
+                return response.IsSuccessStatusCode;
+            }
+
         }
 
     }

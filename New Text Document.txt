@@ -3,3 +3,5 @@ public ICollection<Qualifications> Qualifications { get; set; } instead of list
 
 var baseUrl = Configuration["VenuesApi:BaseUrl"];
 string apiUrl = $"{baseUrl}eventtypes"; stack overflow says will make sure url dosnt change.
+
+staff id was meant to be a string

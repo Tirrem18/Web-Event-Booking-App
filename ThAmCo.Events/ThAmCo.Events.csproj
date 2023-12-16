@@ -21,4 +21,8 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ThAmCo.Venues\ThAmCo.Venues.csproj" />
+  </ItemGroup>
+
 </Project>
