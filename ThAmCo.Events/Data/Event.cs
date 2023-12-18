@@ -13,6 +13,7 @@ namespace ThAmCo.Events.Data
         public string EventTypeId { get; set; }
         public string SelectedVenueCode { get; set; }
         public DateTime SelectedDate { get; set; }
+        public string Reference { get; set; }
 
 
         public List<Booking> Bookings { get; set; }

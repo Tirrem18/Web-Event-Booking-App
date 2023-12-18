@@ -22,7 +22,7 @@ namespace ThAmCo.Events.Controllers
         // GET: Events
         public async Task<IActionResult> Index()
         {
-              return View(await _context.Events.ToListAsync());
+            return View(await _context.Events.ToListAsync());
         }
 
         // GET: Events/Details/5
@@ -34,9 +34,9 @@ namespace ThAmCo.Events.Controllers
             }
 
             var @event = await _context.Events
-                .Include(e => e.Bookings)
-                .ThenInclude(b => b.Guest)
-                .FirstOrDefaultAsync(m => m.EventId == id);
+              .Include(e => e.Bookings)
+              .ThenInclude(b => b.Guest)
+              .FirstOrDefaultAsync(m => m.EventId == id);
             if (@event == null)
             {
                 return NotFound();
@@ -65,7 +65,12 @@ namespace ThAmCo.Events.Controllers
             if (availableVenues.Any())
             {
                 // Pass data to PickVenue (GET)
-                return RedirectToAction("PickVenue", new { model.EventTypeId, model.BeginDate, model.EndDate });
+                return RedirectToAction("PickVenue", new
+                {
+                    model.EventTypeId,
+                    model.BeginDate,
+                    model.EndDate
+                });
             }
             else
             {
@@ -112,7 +117,12 @@ namespace ThAmCo.Events.Controllers
                     var selectedDate = DateTime.Parse(parts[1]);
                     string eventType = model.EventTypeId;
 
-                    return RedirectToAction("Create", new { selectedVenueCode, selectedDate, eventType });
+                    return RedirectToAction("Create", new
+                    {
+                        selectedVenueCode,
+                        selectedDate,
+                        eventType
+                    });
                 }
                 else
                 {
@@ -123,8 +133,6 @@ namespace ThAmCo.Events.Controllers
                 }
             }
         }
-
-
 
         // GET: Events/Create
         public IActionResult Create(string selectedVenueCode, DateTime selectedDate, string eventType)
@@ -143,7 +151,6 @@ namespace ThAmCo.Events.Controllers
             return View(viewModel);
         }
 
-
         // POST: Events/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -151,28 +158,29 @@ namespace ThAmCo.Events.Controllers
         {
             if (ModelState.IsValid)
             {
-
-                // set to 1 atm
+                // Assume staffId is set to 1 for now
                 string staffId = "1";
 
-                // Create reservation
-                bool reservationCreated = await CreateReservationAsync(@event.SelectedVenueCode, @event.SelectedDate, staffId);
-                if (!reservationCreated)
+                // Create reservation and get the reference
+                string reservationReference = await CreateReservationAsync(@event.SelectedVenueCode, @event.SelectedDate, staffId);
+                if (reservationReference == null)
                 {
-                    ViewData["ErrorMessage"] = "Sorry, we can't book this reservation, please try another venue";
+                    ViewData["ErrorMessage"] = "Sorry, we can't book this reservation. Please try another venue.";
                     return View(@event);
                 }
-                else
-                {
-                    // Add and save event
-                    _context.Add(@event);
-                    await _context.SaveChangesAsync();
 
-                }
+                // Set the reservation reference to the event object
+                @event.Reference = reservationReference;
 
+                // Add and save the event with reservation reference
+                _context.Add(@event);
+                await _context.SaveChangesAsync();
+
+                // Redirect to the index action/view after creating the event
                 return RedirectToAction(nameof(Index));
             }
 
+            // If the model state is not valid, re-render the create view with the current model
             return View(@event);
         }
 
@@ -252,7 +260,7 @@ namespace ThAmCo.Events.Controllers
             }
 
             var @event = await _context.Events
-                .FirstOrDefaultAsync(m => m.EventId == id);
+              .FirstOrDefaultAsync(m => m.EventId == id);
             if (@event == null)
             {
                 return NotFound();
@@ -275,7 +283,7 @@ namespace ThAmCo.Events.Controllers
             {
                 _context.Events.Remove(@event);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -319,13 +327,13 @@ namespace ThAmCo.Events.Controllers
             return availableVenues;
         }
 
-        private async Task<bool> CreateReservationAsync(string venueCode, DateTime eventDate, string staffId)
+        private async Task<string> CreateReservationAsync(string venueCode, DateTime eventDate, string staffId)
         {
             var reservationDto = new ReservationPostDto
             {
                 EventDate = eventDate,
                 VenueCode = venueCode,
-                StaffId = staffId 
+                StaffId = staffId
             };
 
             using (var httpClient = new HttpClient())
@@ -334,10 +342,18 @@ namespace ThAmCo.Events.Controllers
                 var content = new StringContent(JsonConvert.SerializeObject(reservationDto), Encoding.UTF8, "application/json");
                 var response = await httpClient.PostAsync(apiUrl, content);
 
-
-                return response.IsSuccessStatusCode;
+                if (response.IsSuccessStatusCode)
+                {
+                    // Read the response content and extract the reservation reference
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var createdReservation = JsonConvert.DeserializeObject<ReservationGetDto>(responseContent);
+                    return createdReservation.Reference; // Return the reservation reference
+                }
+                else
+                {
+                    return null; // Return null if the creation was unsuccessful
+                }
             }
-
         }
 
     }
