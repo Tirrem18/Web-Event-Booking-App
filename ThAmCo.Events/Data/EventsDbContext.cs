@@ -11,6 +11,7 @@ namespace ThAmCo.Events.Data
         public DbSet<Qualifications> Qualifications { get; set; }
 
         public DbSet<StaffQualification> StaffQualifications { get; set; }
+        public DbSet<StaffAssignment> StaffAssignments { get; set; }
 
 
         public string DbPath { get; }
@@ -78,6 +79,21 @@ namespace ThAmCo.Events.Data
                 .HasOne(sq => sq.Qualification)
                 .WithMany(q => q.StaffQualifications)
                 .HasForeignKey(sq => sq.QualificationId);
+
+
+            modelBuilder.Entity<StaffAssignment>()
+            .HasKey(sa => new { sa.EventId, sa.StaffId }); // Composite key
+
+            modelBuilder.Entity<StaffAssignment>()
+                .HasOne(sa => sa.Event)
+                .WithMany(e => e.StaffAssignments)
+                .HasForeignKey(sa => sa.EventId);
+
+            modelBuilder.Entity<StaffAssignment>()
+                .HasOne(sa => sa.Staff)
+                .WithMany(s => s.StaffAssignments)
+                .HasForeignKey(sa => sa.StaffId);
+
 
 
         }

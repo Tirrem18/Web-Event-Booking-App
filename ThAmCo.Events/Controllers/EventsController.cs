@@ -281,10 +281,21 @@ namespace ThAmCo.Events.Controllers
             var @event = await _context.Events.FindAsync(id);
             if (@event != null)
             {
+                // Delete the reservation associated with the event
+                if (!string.IsNullOrEmpty(@event.Reference))
+                {
+                    var reservationDeleted = await DeleteReservationAsync(@event.Reference);
+                    if (!reservationDeleted)
+                    {
+                        ViewBag.ErrorMessage = "An error occurred while deleting the reservation. Please try again later.";
+                    }
+                }
+
+                // Delete the event
                 _context.Events.Remove(@event);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
@@ -353,6 +364,17 @@ namespace ThAmCo.Events.Controllers
                 {
                     return null; // Return null if the creation was unsuccessful
                 }
+            }
+        }
+
+        private async Task<bool> DeleteReservationAsync(string reservationReference)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                string apiUrl = $"https://localhost:7088/api/reservations/{reservationReference}";
+                var response = await httpClient.DeleteAsync(apiUrl);
+
+                return response.IsSuccessStatusCode;
             }
         }
 

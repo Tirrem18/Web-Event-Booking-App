@@ -17,9 +17,7 @@ namespace ThAmCo.Events.Data
 
 
         public List<Booking> Bookings { get; set; }
+        public List<StaffAssignment> StaffAssignments { get; set; }
 
-        // Additional properties such as Description, Duration, etc. can be added if needed
-
-        // Navigation properties for relationships with other tables can be added here
     }
 }

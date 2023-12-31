@@ -16,9 +16,13 @@ namespace ThAmCo.Events.Data
         // This will be used to store a list of qualifications
         public ICollection<StaffQualification> StaffQualifications { get; set; }
 
+        // Collection for StaffAssignments
+        public ICollection<StaffAssignment> StaffAssignments { get; set; }
+
         public Staff()
         {
             StaffQualifications = new HashSet<StaffQualification>();
+            StaffAssignments = new HashSet<StaffAssignment>();
         }
     }
 }

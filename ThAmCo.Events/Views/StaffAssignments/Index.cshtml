@@ -1,0 +1,42 @@
+﻿@model IEnumerable<ThAmCo.Events.Data.StaffAssignment>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Event)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Staff)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model){
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Event.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Staff.FirstName)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { eventId = item.EventId, staffId = item.StaffId }) |
+                    @Html.ActionLink("Details", "Details", new { eventId = item.EventId, staffId = item.StaffId }) |
+                    @Html.ActionLink("Delete", "Delete", new { eventId = item.EventId, staffId = item.StaffId })
+                </td>
+            </tr>
+        }
+
+    </tbody>
+</table>
