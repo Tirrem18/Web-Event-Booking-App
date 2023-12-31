@@ -13,18 +13,19 @@ namespace ThAmCo.Events.Controllers
     {
         private readonly EventsDbContext _context;
 
+        // Constructor: Initializes the database context for guest operations.
         public GuestsController(EventsDbContext context)
         {
             _context = context;
         }
 
-        // GET: Guests
+        // GET: Guests - Retrieves and displays a list of all guests.
         public async Task<IActionResult> Index()
         {
-              return View(await _context.Guests.ToListAsync());
+            return View(await _context.Guests.ToListAsync());
         }
 
-        // GET: Guests/Details/5
+        // GET: Guests/Details/5 - Retrieves and displays details of a specific guest.
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Guests == null)
@@ -32,6 +33,7 @@ namespace ThAmCo.Events.Controllers
                 return NotFound();
             }
 
+            // Retrieves guest details including associated bookings
             var guest = await _context.Guests
                 .Include(g => g.Bookings)
                 .ThenInclude(b => b.Event)
@@ -44,21 +46,20 @@ namespace ThAmCo.Events.Controllers
             return View(guest);
         }
 
-        // GET: Guests/Create
+        // GET: Guests/Create - Displays the guest creation form.
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Guests/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Guests/Create - Handles the guest creation form submission.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("GuestId,FirstName,LastName,Email,PhoneNumber")] Guest guest)
         {
             if (ModelState.IsValid)
             {
+                // Adds the new guest to the database and saves changes
                 _context.Add(guest);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -66,7 +67,7 @@ namespace ThAmCo.Events.Controllers
             return View(guest);
         }
 
-        // GET: Guests/Edit/5
+        // GET: Guests/Edit/5 - Displays the guest editing form for a specific guest.
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Guests == null)
@@ -82,9 +83,7 @@ namespace ThAmCo.Events.Controllers
             return View(guest);
         }
 
-        // POST: Guests/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Guests/Edit/5 - Handles the guest editing form submission.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("GuestId,FirstName,LastName,Email,PhoneNumber")] Guest guest)
@@ -98,6 +97,7 @@ namespace ThAmCo.Events.Controllers
             {
                 try
                 {
+                    // Updates the guest details in the database and saves changes
                     _context.Update(guest);
                     await _context.SaveChangesAsync();
                 }
@@ -117,7 +117,7 @@ namespace ThAmCo.Events.Controllers
             return View(guest);
         }
 
-        // GET: Guests/Delete/5
+        // GET: Guests/Delete/5 - Displays the guest deletion confirmation form.
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Guests == null)
@@ -135,30 +135,33 @@ namespace ThAmCo.Events.Controllers
             return View(guest);
         }
 
-        // POST: Guests/Delete/5
+        // POST: Guests/Delete/5 - Handles the confirmation of guest deletion.
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.Guests == null)
             {
-                return Problem("Entity set 'EventsDbContext.Guests'  is null.");
+                return Problem("Entity set 'EventsDbContext.Guests' is null.");
             }
             var guest = await _context.Guests.FindAsync(id);
             if (guest != null)
             {
+                // Removes the guest from the database and saves changes
                 _context.Guests.Remove(guest);
+                await _context.SaveChangesAsync();
             }
-            
-            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
+        // Checks if a specific guest exists based on their ID.
         private bool GuestExists(int id)
         {
-          return _context.Guests.Any(e => e.GuestId == id);
+            return _context.Guests.Any(e => e.GuestId == id);
         }
-        // POST: Guests/Anonymise
+
+        // POST: Guests/Anonymise - Handles the anonymization of guest data.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Anonymise(int id)
@@ -169,7 +172,7 @@ namespace ThAmCo.Events.Controllers
                 return NotFound();
             }
 
-            // Anonymise guest data
+            // Anonymizes the guest's data
             guest.FirstName = "Anonymous";
             guest.LastName = "Anonymous";
             guest.Email = "anonymous@example.com";
@@ -177,6 +180,7 @@ namespace ThAmCo.Events.Controllers
 
             try
             {
+                // Updates the anonymized guest details in the database and saves changes
                 _context.Update(guest);
                 await _context.SaveChangesAsync();
             }
@@ -195,5 +199,4 @@ namespace ThAmCo.Events.Controllers
             return RedirectToAction(nameof(Index));
         }
     }
-
 }
