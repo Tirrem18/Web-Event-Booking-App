@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Details";
+    int guestCount = Model.Bookings.Count;
+    int staffCount = Model.StaffAssignments.Count;
+    bool insufficientStaff = guestCount > 0 && (staffCount == 0 || guestCount / staffCount > 10);
+    bool hasFirstAider = Model.StaffAssignments.Any(sa => sa.Staff.StaffQualifications.Any(sq => sq.Qualification.Name == "First Aider"));
 }
 
 <h1>Details</h1>
@@ -50,6 +54,54 @@
     else
     {
         <p>No guests have been booked for this event.</p>
+    }
+</div>
+<div>
+
+
+</div>
+<div>
+    <h4>Staff Assignments</h4>
+    @if (insufficientStaff)
+    {
+        <div class="alert alert-warning">
+            Warning: There are fewer than one staff member per 10 guests.
+            Current Ratio: @staffCount Staff for @guestCount Guests.
+        </div>
+    }
+     @if (!hasFirstAider)
+    {
+        <div class="alert alert-danger">
+            Warning: No first aider has been assigned to this event.
+        </div>
+    }
+    @if (Model.StaffAssignments.Any())
+    {
+        <p>Total Staff Assigned: @Model.StaffAssignments.Count</p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Staff Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var assignment in Model.StaffAssignments)
+                {
+                    <tr>
+                        <td>@assignment.Staff.FirstName @assignment.Staff.LastName</td>
+                        <td>
+                            <a asp-controller="StaffAssignments" asp-action="Edit" asp-route-eventId="@assignment.EventId" asp-route-staffId="@assignment.StaffId">Edit</a> |
+                            <a asp-controller="StaffAssignments" asp-action="Delete" asp-route-eventId="@assignment.EventId" asp-route-staffId="@assignment.StaffId">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No staff have been assigned to this event.</p>
     }
 </div>
 <div>

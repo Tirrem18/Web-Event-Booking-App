@@ -34,7 +34,9 @@ namespace ThAmCo.Events.Controllers
 
             var staff = await _context.Staff
                 .Include(s => s.StaffQualifications)
-                .ThenInclude(sq => sq.Qualification)
+                    .ThenInclude(sq => sq.Qualification)
+                .Include(s => s.StaffAssignments) // Include StaffAssignments
+                    .ThenInclude(sa => sa.Event) // Include the Event for each StaffAssignment
                 .FirstOrDefaultAsync(m => m.StaffId == id);
 
             if (staff == null)

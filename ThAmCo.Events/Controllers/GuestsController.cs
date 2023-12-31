@@ -158,5 +158,42 @@ namespace ThAmCo.Events.Controllers
         {
           return _context.Guests.Any(e => e.GuestId == id);
         }
+        // POST: Guests/Anonymise
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Anonymise(int id)
+        {
+            var guest = await _context.Guests.FindAsync(id);
+            if (guest == null)
+            {
+                return NotFound();
+            }
+
+            // Anonymise guest data
+            guest.FirstName = "Anonymous";
+            guest.LastName = "Anonymous";
+            guest.Email = "anonymous@example.com";
+            guest.PhoneNumber = "0000000000";
+
+            try
+            {
+                _context.Update(guest);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!GuestExists(guest.GuestId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
     }
+
 }

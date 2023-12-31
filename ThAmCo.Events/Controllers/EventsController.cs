@@ -34,9 +34,12 @@ namespace ThAmCo.Events.Controllers
             }
 
             var @event = await _context.Events
-              .Include(e => e.Bookings)
-              .ThenInclude(b => b.Guest)
-              .FirstOrDefaultAsync(m => m.EventId == id);
+                .Include(e => e.Bookings)
+                .ThenInclude(b => b.Guest)
+                .Include(e => e.StaffAssignments) // Include StaffAssignments
+                .ThenInclude(sa => sa.Staff) // Include Staff details
+                .FirstOrDefaultAsync(m => m.EventId == id);
+
             if (@event == null)
             {
                 return NotFound();
